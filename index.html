@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FluxCipher Code Editor ⚡</title>
+
+  <!-- CodeMirror 5 (CDN) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/eclipse.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closetag.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+
+  <style>
+    :root{
+      --container-bg: rgba(0,0,0,0.6);
+      --accent:#6a11cb;
+      --accent2:#2575fc;
+      --btn:#2575fc;
+    }
+
+    *{box-sizing:border-box}
+    body {
+      margin:0;
+      font-family: Inter, Arial, sans-serif;
+      background: linear-gradient(135deg,#6a11cb 0%, #2575fc 100%);
+      color: #fff;
+      min-height:100vh;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:24px;
+    }
+
+    .wrap {
+      width:100%;
+      max-width:1100px;
+    }
+
+    .container {
+      background: var(--container-bg);
+      border-radius:12px;
+      padding:16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+
+    header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    header h1 {
+      margin:0;
+      font-size:18px;
+      letter-spacing:0.6px;
+    }
+
+    .controls {
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    .tabs {
+      display:flex;
+      gap:8px;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+    .tab-btn {
+      background:#2b2b2b;
+      border:1px solid rgba(255,255,255,0.04);
+      color:#fff;
+      padding:8px 12px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+    }
+    .tab-btn.active {
+      background: linear-gradient(90deg,var(--accent),var(--accent2));
+      box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+    }
+
+    .editor-row {
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      align-items:start;
+    }
+
+    .editor-box {
+      background: #0e0e10;
+      border-radius:8px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,0.04);
+      padding:8px;
+    }
+    .editor-title {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:6px 8px;
+      font-size:13px;
+      color:#ddd;
+    }
+
+    .cm-wrap { height:300px; } /* adjust editor height */
+
+    .actions {
+      margin-top:10px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .btn {
+      background:var(--btn);
+      border:none;
+      padding:10px 14px;
+      border-radius:8px;
+      color:#fff;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .btn.secondary { background:#444; }
+    .btn.ghost { background:transparent; border:1px solid rgba(255,255,255,0.06); }
+
+    .preview-box {
+      margin-top:12px;
+    }
+    #preview {
+      width:100%;
+      height:350px;
+      border-radius:8px;
+      border:1px solid rgba(0,0,0,0.4);
+      background:white;
+    }
+
+    .error-box {
+      margin-top:8px;
+      background:#111;
+      color:#ff6b6b;
+      padding:10px;
+      border-radius:8px;
+      min-height:44px;
+      font-family: monospace;
+      white-space:pre-wrap;
+    }
+
+    .bottom-row {
+      margin-top:12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .telegram a {
+      background:#0088cc;
+      padding:10px 14px;
+      color:white;
+      text-decoration:none;
+      border-radius:8px;
+      font-weight:700;
+    }
+
+    footer {
+      margin-top:14px;
+      text-align:center;
+      color:#ddd;
+      font-size:13px;
+    }
+
+    /* Responsive */
+    @media (max-width:900px) {
+      .editor-row { grid-template-columns: 1fr; }
+      .cm-wrap { height:220px; }
+      #preview { height:260px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="container">
+      <header>
+        <h1>⚡ FluxCipher — Web Code Editor</h1>
+        <div class="controls">
+          <div style="font-size:13px;color:#e6e6e6;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.03)">Powered by FluxCipher ⚡</div>
+        </div>
+      </header>
+
+      <div class="tabs" role="tablist">
+        <button class="tab-btn active" data-tab="html">HTML</button>
+        <button class="tab-btn" data-tab="css">CSS</button>
+        <button class="tab-btn" data-tab="js">JavaScript</button>
+        <select id="themeSelect" style="background:#222;color:#fff;padding:8px;border-radius:8px;border:none;font-weight:600;margin-left:8px">
+          <option value="dracula">Coder (Dark)</option>
+          <option value="monokai">Monokai</option>
+          <option value="eclipse">Light</option>
+        </select>
+      </div>
+
+      <div class="editor-row">
+        <div class="editor-box">
+          <div class="editor-title">Editor</div>
+          <div id="cm-html" class="cm-wrap"></div>
+          <div id="cm-css" class="cm-wrap" style="display:none"></div>
+          <div id="cm-js" class="cm-wrap" style="display:none"></div>
+
+          <div class="actions">
+            <button class="btn" id="runBtn">▶ Run</button>
+            <button class="btn secondary" id="detectBtn">Detect Errors</button>
+            <button class="btn secondary" id="fixBtn">Auto Fix</button>
+            <button class="btn ghost" id="downloadBtn">Download</button>
+          </div>
+        </div>
+
+        <div class="editor-box">
+          <div class="editor-title">Live Preview</div>
+          <div class="preview-box">
+            <iframe id="preview" sandbox="allow-scripts allow-same-origin"></iframe>
+          </div>
+
+          <div style="margin-top:10px"> <strong>Errors / Warnings</strong></div>
+          <div id="errors" class="error-box">NO ERRORS DETECTED</div>
+
+          <div class="bottom-row">
+            <div class="telegram"><a href="https://t.me/Flux_V1" target="_blank" rel="noopener">Join Telegram Channel</a></div>
+            <div style="font-size:13px;color:#ccc">Theme: <span id="themeLabel">Coder (Dark)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <footer>© FluxCipher ⚡ — Built for quick testing</footer>
+    </div>
+  </div>
+
+  <script>
+    // --- init CodeMirror editors ---
+    const themeSelect = document.getElementById('themeSelect');
+    const themeLabel = document.getElementById('themeLabel');
+
+    let cmHTML = CodeMirror(document.getElementById('cm-html'), {
+      mode: "xml",
+      htmlMode: true,
+      theme: "dracula",
+      lineNumbers: true,
+      styleActiveLine: true,
+      autoCloseTags: true,
+      autoCloseBrackets: true,
+      value: "<!doctype html>\n<html>\n  <head>\n    <meta charset='utf-8'>\n    <title>Flux Preview</title>\n  </head>\n  <body>\n    <h1>Hello FluxCipher ⚡</h1>\n  </body>\n</html>"
+    });
+
+    let cmCSS = CodeMirror(document.getElementById('cm-css'), {
+      mode: "css",
+      theme: "dracula",
+      lineNumbers: true,
+      styleActiveLine: true,
+      autoCloseBrackets: true,
+      value: "body { font-family: Arial, sans-serif; background: #fff; }\nh1 { color: purple; text-align:center; }"
+    });
+
+    let cmJS = CodeMirror(document.getElementById('cm-js'), {
+      mode: "javascript",
+      theme: "dracula",
+      lineNumbers: true,
+      styleActiveLine: true,
+      autoCloseBrackets: true,
+      value: "console.log('FluxCipher Active ⚡');"
+    });
+
+    const editors = { html: cmHTML, css: cmCSS, js: cmJS };
+    let current = 'html';
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        const tab = e.currentTarget.dataset.tab;
+        switchTo(tab);
+      });
+    });
+
+    function switchTo(tab){
+      current = tab;
+      // show/hide editors
+      document.getElementById('cm-html').style.display = tab==='html' ? 'block' : 'none';
+      document.getElementById('cm-css').style.display = tab==='css' ? 'block' : 'none';
+      document.getElementById('cm-js').style.display = tab==='js' ? 'block' : 'none';
+      // refresh editors so they render correctly
+      editors.html.refresh();
+      editors.css.refresh();
+      editors.js.refresh();
+    }
+
+    // Run code to iframe
+    const preview = document.getElementById('preview');
+
+    function runCode(){
+      const html = editors.html.getValue();
+      const css = "<style>\n"+editors.css.getValue()+"\n</style>";
+      const js = "<script>try{"+editors.js.getValue()+"}catch(e){parent.postMessage({type:'js-error',message:e.message},'*')}<\/script>";
+
+      const src = html.replace(/<\/body>/i, css + js + "\n</body>").replace(/<\/html>/i,"</html>");
+      // write to iframe
+      const doc = preview.contentWindow.document;
+      doc.open();
+      doc.write(src);
+      doc.close();
+      // clear error box
+      setErrors("NO ERRORS DETECTED");
+    }
+
+    // Error detection
+    function setErrors(txt){
+      const el = document.getElementById('errors');
+      el.textContent = txt;
+    }
+
+    // Basic HTML validation (very simple checks)
+    function validateHTML(str){
+      const warnings = [];
+      if(!/<!doctype html/i.test(str)) warnings.push("No <!doctype html> declaration (recommended).");
+      if(!/<html[\s\S]*?>/i.test(str) || !/<\/html>/i.test(str)) warnings.push("Missing <html> or </html> tag.");
+      if(!/<head[\s\S]*?>/i.test(str) || !/<\/head>/i.test(str)) warnings.push("Missing <head> or </head> tag.");
+      if(!/<body[\s\S]*?>/i.test(str) || !/<\/body>/i.test(str)) warnings.push("Missing <body> or </body> tag.");
+      return warnings;
+    }
+
+    // Basic CSS validator
+    function validateCSS(str){
+      const warnings=[];
+      // simple: check matching braces count
+      const open = (str.match(/{/g)||[]).length;
+      const close = (str.match(/}/g)||[]).length;
+      if(open !== close) warnings.push("Mismatched CSS braces { }");
+      return warnings;
+    }
+
+    // JS error detection by Function constructor (catch syntax/runtime on immediate eval)
+    function validateJS(str){
+      try{
+        new Function(str);
+        return [];
+      }catch(e){
+        return [e.message];
+      }
+    }
+
+    // detect errors for all
+    document.getElementById('detectBtn').addEventListener('click', ()=>{
+      const html = editors.html.getValue();
+      const css = editors.css.getValue();
+      const js = editors.js.getValue();
+
+      const htmlWarn = validateHTML(html);
+      const cssWarn = validateCSS(css);
+      const jsWarn = validateJS(js);
+
+      const all = [].concat(htmlWarn, cssWarn, jsWarn);
+      if(all.length) setErrors(all.join(" \n• "));
+      else setErrors("NO ERRORS DETECTED");
+    });
+
+    // Listen for errors posted from iframe (runtime JS)
+    window.addEventListener('message', (e)=>{
+      if(e.data && e.data.type === 'js-error'){
+        setErrors("JavaScript Runtime Error: " + e.data.message);
+      }
+    }, false);
+
+    // Auto Fix (basic)
+    document.getElementById('fixBtn').addEventListener('click', ()=>{
+      const cur = current;
+      const editor = editors[cur];
+      let code = editor.getValue();
+      // very basic fixes: indent after { and put semicolon linebreaks
+      code = code.replace(/;\s*/g,";\n");
+      code = code.replace(/{\s*/g,"{\n  ");
+      code = code.replace(/\n\s*}/g,"\n}");
+      editor.setValue(code);
+      alert("Auto Fix applied (basic formatting)");
+    });
+
+    // Download code (combined)
+    document.getElementById('downloadBtn').addEventListener('click', ()=>{
+      const all = "<!-- HTML -->\n"+editors.html.getValue()+"\n\n/* CSS */\n"+editors.css.getValue()+"\n\n// JavaScript\n"+editors.js.getValue();
+      const blob = new Blob([all], {type:'text/plain'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = "fluxcipher_code.txt";
+      a.click();
+    });
+
+    // Run button
+    document.getElementById('runBtn').addEventListener('click', runCode);
+
+    // theme switch
+    themeSelect.addEventListener('change', ()=>{
+      const theme = themeSelect.value;
+      editors.html.setOption('theme', theme);
+      editors.css.setOption('theme', theme);
+      editors.js.setOption('theme', theme);
+      themeLabel.textContent = theme === 'dracula' ? 'Coder (Dark)' : theme === 'monokai' ? 'Monokai' : 'Light';
+    });
+
+    // init - make sure editors visible state correct
+    switchTo('html');
+
+    // Auto-run once at load
+    setTimeout(runCode, 300);
+  </script>
+</body>
+</html>
