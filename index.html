@@ -1,206 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>⚡ FluxCipher Code Editor</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FluxCipher Code Editor ⚡</title>
 
-  <!-- CodeMirror -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closetag.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <!-- CodeMirror CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css" />
 
   <style>
     body {
-      margin:0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg,#6a11cb,#2575fc);
-      color:#fff;
-      display:flex;
-      justify-content:center;
-      align-items:flex-start;
-      padding:20px;
-      min-height:100vh;
-    }
-    .container {
-      background:rgba(0,0,0,0.6);
-      border-radius:12px;
-      padding:16px;
-      width:100%;
-      max-width:1100px;
-      box-shadow:0 10px 30px rgba(0,0,0,0.35);
+      margin: 0;
+      padding: 0;
+      font-family: monospace;
+      background: #1e1e1e;
+      color: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
     header {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:12px;
+      background: #111;
+      padding: 10px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
     }
-    h1 {margin:0;font-size:18px}
-    select,button {
-      padding:8px 12px;
-      border-radius:8px;
-      border:none;
-      font-weight:600;
-      cursor:pointer;
+    #controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 10px;
+      background: #222;
     }
-    #editor {height:320px;border:1px solid #444;border-radius:8px;}
-    .actions {margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
-    .btn {background:#2575fc;color:#fff}
-    .btn.secondary{background:#444}
-    iframe {
-      width:100%;height:320px;margin-top:12px;border-radius:8px;
-      border:1px solid rgba(255,255,255,0.2);background:#fff;
+    #controls button, #controls select {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
     }
-    .error-box {
-      margin-top:8px;
-      background:#111;
-      color:#ff6b6b;
-      padding:10px;
-      border-radius:8px;
-      min-height:40px;
-      font-family:monospace;
-      white-space:pre-wrap;
+    #controls button:hover {
+      opacity: 0.8;
     }
-    footer {margin-top:12px;text-align:center;font-size:13px;color:#ddd}
-    .telegram a {
-      background:#0088cc;
-      color:#fff;
-      text-decoration:none;
-      padding:8px 14px;
-      border-radius:8px;
-      font-weight:600;
+    #editor {
+      flex: 1;
+      border-right: 2px solid #333;
+    }
+    #preview {
+      flex: 1;
+      background: white;
+    }
+    #container {
+      flex: 1;
+      display: flex;
+      height: 100%;
+    }
+    #error-box {
+      background: #ff4444;
+      color: white;
+      padding: 5px;
+      font-size: 14px;
+      display: none;
+    }
+    footer {
+      background: #111;
+      text-align: center;
+      padding: 8px;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>⚡ FluxCipher — Web Code Editor</h1>
-      <div class="telegram"><a href="https://t.me/Flux_V1" target="_blank">Join Telegram</a></div>
-    </header>
+  <header>⚡ FluxCipher Code Editor ⚡</header>
 
-    <select id="langSelect">
+  <div id="controls">
+    <select id="language">
       <option value="html">HTML</option>
       <option value="css">CSS</option>
-      <option value="javascript">JavaScript</option>
+      <option value="js">JavaScript</option>
     </select>
-
-    <div id="editor"></div>
-
-    <div class="actions">
-      <button class="btn" id="runBtn">▶ Run</button>
-      <button class="btn secondary" id="detectBtn">Detect Errors</button>
-      <button class="btn secondary" id="fixBtn">Auto Fix</button>
-      <button class="btn secondary" id="saveBtn">Save</button>
-      <button class="btn secondary" id="loadBtn">Load</button>
-      <button class="btn secondary" id="clearBtn">Clear</button>
-      <button class="btn secondary" id="downloadBtn">Download</button>
-    </div>
-
-    <iframe id="preview" sandbox="allow-scripts allow-same-origin"></iframe>
-    <div id="errors" class="error-box">NO ERRORS DETECTED</div>
-
-    <footer>Powered by FluxCipher ⚡</footer>
+    <button onclick="runCode()">Run ▶</button>
+    <button onclick="detectErrors()">Detect Errors ❗</button>
+    <button onclick="autoFix()">Auto Fix 🛠</button>
+    <button onclick="saveCode()">Save 💾</button>
+    <button onclick="loadCode()">Load 📂</button>
+    <button onclick="clearCode()">Clear 🧹</button>
+    <button onclick="downloadCode()">Download ⬇</button>
   </div>
 
-<script>
-  // CodeMirror init
-  let editor = CodeMirror(document.getElementById("editor"), {
-    mode: "xml",
-    theme: "dracula",
-    lineNumbers: true,
-    autoCloseTags: true,
-    autoCloseBrackets: true,
-    value: "<!DOCTYPE html>\n<html>\n<head>\n<title>Flux Test</title>\n</head>\n<body>\n<h1>Hello FluxCipher ⚡</h1>\n</body>\n</html>"
-  });
+  <div id="error-box"></div>
 
-  const preview = document.getElementById("preview");
-  const errors = document.getElementById("errors");
-  const langSelect = document.getElementById("langSelect");
+  <div id="container">
+    <textarea id="code"></textarea>
+    <iframe id="preview"></iframe>
+  </div>
 
-  // Language switching
-  langSelect.addEventListener("change", ()=>{
-    let lang = langSelect.value;
-    let mode = lang==="html"?"xml":lang;
-    editor.setOption("mode", mode);
-  });
+  <footer>Powered by FluxCipher ⚡</footer>
 
-  // Run button
-  function runCode(){
-    let code = editor.getValue();
-    let lang = langSelect.value;
-    let output="";
-    if(lang==="html") output = code;
-    if(lang==="css") output = "<style>"+code+"</style>";
-    if(lang==="javascript") output = "<script>try{"+code+"}catch(e){parent.postMessage({type:'js-error',message:e.message},'*')}<\/script>";
-    const doc = preview.contentWindow.document;
-    doc.open();doc.write(output);doc.close();
-    errors.textContent="NO ERRORS DETECTED";
-  }
-  document.getElementById("runBtn").addEventListener("click", runCode);
+  <!-- CodeMirror JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
 
-  // Error detection
-  function detectErrors(){
-    let lang = langSelect.value;
-    let code = editor.getValue();
-    let issues=[];
-    try{
-      if(lang==="javascript") new Function(code);
-      if(lang==="css"){
-        const open=(code.match(/{/g)||[]).length;
-        const close=(code.match(/}/g)||[]).length;
-        if(open!==close) issues.push("CSS braces mismatch { }");
+  <script>
+    // Editor Setup
+    const editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+      lineNumbers: true,
+      theme: "dracula",
+      mode: "htmlmixed",
+      tabSize: 2
+    });
+
+    const previewFrame = document.getElementById("preview");
+    const errorBox = document.getElementById("error-box");
+    const langSelect = document.getElementById("language");
+
+    // Run code
+    function runCode() {
+      const code = editor.getValue();
+      errorBox.style.display = "none";
+      if (langSelect.value === "html") {
+        previewFrame.srcdoc = code;
+      } else if (langSelect.value === "css") {
+        previewFrame.srcdoc = `<style>${code}</style>`;
+      } else if (langSelect.value === "js") {
+        try {
+          previewFrame.srcdoc = `<script>${code}<\/script>`;
+        } catch (err) {
+          errorBox.style.display = "block";
+          errorBox.innerText = err;
+        }
       }
-      if(lang==="html"){
-        if(!/<html/i.test(code)) issues.push("Missing <html> tag?");
-      }
-    }catch(e){issues.push(e.message);}
-    errors.textContent = issues.length?issues.join("\n• "):"NO ERRORS DETECTED";
-  }
-  document.getElementById("detectBtn").addEventListener("click", detectErrors);
-
-  // Real-time JS error detection
-  editor.on("change", ()=>{
-    if(langSelect.value==="javascript"){
-      try{ new Function(editor.getValue()); errors.textContent="NO ERRORS DETECTED"; }
-      catch(e){ errors.textContent="Syntax Error: "+e.message; }
     }
-  });
 
-  // Auto Fix
-  document.getElementById("fixBtn").addEventListener("click", ()=>{
-    let code = editor.getValue();
-    code = code.replace(/;\s*/g,";\n").replace(/{\s*/g,"{\n  ").replace(/\n\s*}/g,"\n}");
-    editor.setValue(code);
-  });
+    // Detect JS errors
+    function detectErrors() {
+      errorBox.style.display = "none";
+      if (langSelect.value === "js") {
+        try {
+          new Function(editor.getValue())();
+          alert("✅ No syntax errors found!");
+        } catch (err) {
+          errorBox.style.display = "block";
+          errorBox.innerText = "❌ " + err.message;
+        }
+      } else {
+        alert("Error detection works only for JavaScript.");
+      }
+    }
 
-  // Save to localStorage
-  document.getElementById("saveBtn").addEventListener("click", ()=>localStorage.setItem("fluxCode",editor.getValue()));
-  document.getElementById("loadBtn").addEventListener("click", ()=>editor.setValue(localStorage.getItem("fluxCode")||""));
-  document.getElementById("clearBtn").addEventListener("click", ()=>editor.setValue(""));
+    // Auto Fix (basic indentation)
+    function autoFix() {
+      editor.setValue(js_beautify(editor.getValue(), { indent_size: 2 }));
+    }
 
-  // Download
-  document.getElementById("downloadBtn").addEventListener("click", ()=>{
-    const blob=new Blob([editor.getValue()],{type:"text/plain"});
-    const a=document.createElement("a");
-    a.href=URL.createObjectURL(blob);
-    a.download="fluxcipher_code.txt";
-    a.click();
-  });
+    // Save code (localStorage)
+    function saveCode() {
+      localStorage.setItem("fluxCode", editor.getValue());
+      alert("💾 Code Saved!");
+    }
+    function loadCode() {
+      const saved = localStorage.getItem("fluxCode");
+      if (saved) editor.setValue(saved);
+    }
+    function clearCode() {
+      editor.setValue("");
+    }
+    function downloadCode() {
+      const blob = new Blob([editor.getValue()], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `flux-${langSelect.value}.txt`;
+      link.click();
+    }
 
-  // Listen runtime JS errors
-  window.addEventListener("message",(e)=>{
-    if(e.data.type==="js-error") errors.textContent="Runtime Error: "+e.data.message;
-  });
-
-  // Auto-run on load
-  setTimeout(runCode,500);
-</script>
+    // Beautify (Auto Fix helper)
+    function js_beautify(js_source, options) {
+      return js_source.replace(/\t/g, "  ");
+    }
+  </script>
 </body>
 </html>
